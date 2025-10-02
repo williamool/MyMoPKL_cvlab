@@ -1,7 +1,7 @@
 import datetime
 import os,random
 import numpy as np
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 import torch
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -25,8 +25,8 @@ if __name__ == "__main__":
     distributed     = False # 使用分布式训练
     sync_bn         = False # 使用同步批归一化
     fp16            = False # 使用混合精度训练
-    classes_path    = 'D:/Github/MyMoPKL/MoPKL-main/model_data/classes.txt' # 类别路径
-    model_path      = 'D:/Github/MyMoPKL/MoPKL-main/model_data/pre_trained_backbone.pth' # 预训练模型路径
+    classes_path    = '/home/wanboling/disk2/MyMoPKL/MoPKL-main/model_data/classes.txt' # 类别路径
+    model_path      = '/home/wanboling/disk2/MyMoPKL/MoPKL-main/model_data/pre_trained_backbone.pth' # 预训练模型路径
     input_shape     = [512, 512] # 输入图像大小
     phi             = 's' # 模型大小
     mosaic              = False # mosaic数据增强
@@ -47,12 +47,12 @@ if __name__ == "__main__":
     weight_decay        = 5e-4 # L2正则化系数
     lr_decay_type       = "cos" # 余弦退火学习率衰减
     save_period         = 1 # 权重保存周期
-    save_dir            = 'D:/Github/MyMoPKL/logs' # 权重保存路径
+    save_dir            = '/home/wanboling/disk2/MyMoPKL/logs' # 权重保存路径
     eval_flag           = True # 模型验证
     eval_period         = 100
     num_workers         = 1
-    train_annotation_path = 'D:/Github/ITSDT/coco_train_ITSDT.txt' # 训练数据集路径
-    val_annotation_path = 'D:/Github/ITSDT/coco_val_ITSDT.txt' # 验证数据集路径
+    train_annotation_path = '/home/wanboling/disk2/ITSDT/coco_train_ITSDT.txt' # 训练数据集路径
+    val_annotation_path = '/home/wanboling/disk2/ITSDT/coco_val_ITSDT.txt' # 验证数据集路径
     
     ngpus_per_node  = torch.cuda.device_count() # gpu数
     

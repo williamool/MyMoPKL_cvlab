@@ -52,17 +52,19 @@ class seqDataset(Dataset):
             self.length = len(data_lines)
             for line in data_lines:
                 line = line.strip('\n').split()
-                self.img_idx.append(line[0])
+                # 转换Windows路径为Linux路径
+                img_path = line[0].replace('D:/Github/ITSDT', '/home/wanboling/disk2/ITSDT')
+                self.img_idx.append(img_path)
                 self.anno_idx.append(np.array([np.array(list(map(int,box.split(',')))) for box in line[1:]]))
 
         # 加载文本描述与运动关系
         ###############################
-        description = pickle.load(open('D:/Github/MyMoPKL/emb_train_ITSDT.pkl', 'rb'))
+        description = pickle.load(open('/home/wanboling/disk2/MyMoPKL/emb_train_ITSDT.pkl', 'rb'))
         embeddings = np.array(list(description.values()))
         self.cap_idx =list(description.keys())
         self.motion_cap_idx = np.array(list(description.values()))
 
-        relation = pickle.load(open('D:/Github/MyMoPKL/motion_relation_ITSDT.pkl', 'rb'))
+        relation = pickle.load(open('/home/wanboling/disk2/MyMoPKL/motion_relation_ITSDT.pkl', 'rb'))
         relations = np.array(list(relation.values()))
         self.re_idx = list(relation.keys())
         self.motion_re_idx = np.array(list(relation.values()))
