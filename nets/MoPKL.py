@@ -209,7 +209,7 @@ class MoPKL(nn.Module):
     def __init__(self, num_classes, num_frame=5):
         super(MoPKL, self).__init__()
         
-        self.num_frame = num_frame
+        self.num_frame = num_frame # 两帧输入
         self.backbone = Feature_Extractor(0.33,0.50)
         self.fusion = Fusion_Module(channels=[128], num_frame=num_frame)
         self.head = YOLOXHead(num_classes=num_classes, width = 1.0, in_channels = [256], act = "silu")
@@ -254,7 +254,7 @@ class MoPKL(nn.Module):
         feat = []
         outputs = []
         
-        for i in range(self.num_frame-2,self.num_frame): # 从输入序列取最后两帧
+        for i in range(self.num_frame-2,self.num_frame): # 输入序列两帧
             f_feats = self.backbone(inputs[:,:,i,:,:]) # 提取特征，inputs参数分别为：Batch size, Channel, 第几帧, Height, Width
             feat.append(f_feats) # 把特征存到列表feat
         B, N, W, H = f_feats.shape
