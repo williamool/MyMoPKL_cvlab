@@ -16,20 +16,20 @@ from utils.utils import cvtColor, get_classes, preprocess_input, resize_image
 from utils.utils_bbox import decode_outputs, non_max_suppression
 
 map_mode            = 0
-cocoGt_path         = 'D:/Github/ITSDT/annotations/instances_test2017.json'
-dataset_img_path    = 'D:/Github/ITSDT/'
+cocoGt_path         = '/home/wanboling/disk2/ITSDT/annotations/instances_test2017.json'
+dataset_img_path    = '/home/wanboling/disk2/ITSDT'
 # cocoGt_path         = '/home/public/DAUB/test.json'
 # dataset_img_path    = '/home/public/DAUB/'
 # cocoGt_path         = '/home/public/IRDST-H/test.json'
 # dataset_img_path    = '/home/public/IRDST-H/'
 
-temp_save_path      = 'map_out/coco_eval'
+temp_save_path      = '/home/wanboling/disk2/MyMoPKL/test_out'
 
 class MAP_vid(object):
     _defaults = {
         
-        "model_path"        : 'D:/Github/MyMoPKL/logs/ITSDT_80.67_90.35.pth',
-        "classes_path"      : 'D:/Github/MyMoPKL/MoPKL-main/model_data/classes.txt',
+        "model_path"        : '/home/wanboling/disk2/MyMoPKL/logs/loss_2025_10_03_05_12_41/best_epoch_weights.pth',
+        "classes_path"      : '/home/wanboling/disk2/MyMoPKL/MoPKL-main/model_data/classes.txt',
         "input_shape"       : [512, 512],
         "phi"               : 's',
         "confidence"        : 0.5,
@@ -123,6 +123,12 @@ if __name__ == "__main__":
         os.makedirs(temp_save_path)
 
     cocoGt      = COCO(cocoGt_path)
+    # 添加缺失的 info 字段，避免 loadRes 时出现 KeyError
+    if 'info' not in cocoGt.dataset:
+        cocoGt.dataset['info'] = {}
+    if 'licenses' not in cocoGt.dataset:
+        cocoGt.dataset['licenses'] = []
+    
     ids         = list(cocoGt.imgToAnns.keys())
     clsid2catid = cocoGt.getCatIds()
 
@@ -158,12 +164,52 @@ if __name__ == "__main__":
         recalls = cocoEval.eval['recall']
         recall_50 = recalls[0,0,0,-1] 
                 
-        with open("pr_results.txt", 'w') as f: 
+        with open(os.path.join(temp_save_path, "pr_results.txt"), 'w') as f: 
             for pred in precision_50:
                 f.writelines(str(pred)+'\t')
         
-        print("Precision: %.4f, Recall: %.4f, F1: %.4f" %(np.mean(precision_50[:int(recall_50*100)]), recall_50, 2*recall_50*np.mean(precision_50[:int(recall_50*100)])/( recall_50+np.mean(precision_50[:int(recall_50*100)]))))
+        # 计算自定义指标
+        precision_avg = np.mean(precision_50[:int(recall_50*100)])
+        f1_score = 2*recall_50*precision_avg/(recall_50+precision_avg)
+        
+        print("Precision: %.4f, Recall: %.4f, F1: %.4f" %(precision_avg, recall_50, f1_score))
         print("Get map done.")
+        
+        # 保存所有评估结果到文件
+        with open(os.path.join(temp_save_path, "evaluation_results.txt"), 'w') as f:
+            f.write("="*60 + "\n")
+            f.write("COCO Evaluation Results\n")
+            f.write("="*60 + "\n\n")
+            
+            # COCO标准指标
+            f.write("COCO Standard Metrics:\n")
+            f.write("-"*60 + "\n")
+            stats_names = [
+                'AP @ IoU=0.50:0.95 | area=all | maxDets=100',
+                'AP @ IoU=0.50      | area=all | maxDets=100',
+                'AP @ IoU=0.75      | area=all | maxDets=100',
+                'AP @ IoU=0.50:0.95 | area=small | maxDets=100',
+                'AP @ IoU=0.50:0.95 | area=medium | maxDets=100',
+                'AP @ IoU=0.50:0.95 | area=large | maxDets=100',
+                'AR @ IoU=0.50:0.95 | area=all | maxDets=1',
+                'AR @ IoU=0.50:0.95 | area=all | maxDets=10',
+                'AR @ IoU=0.50:0.95 | area=all | maxDets=100',
+                'AR @ IoU=0.50:0.95 | area=small | maxDets=100',
+                'AR @ IoU=0.50:0.95 | area=medium | maxDets=100',
+                'AR @ IoU=0.50:0.95 | area=large | maxDets=100'
+            ]
+            for i, name in enumerate(stats_names):
+                f.write(f"{name:55s} = {cocoEval.stats[i]:.4f}\n")
+            
+            f.write("\n" + "="*60 + "\n")
+            f.write("Custom Metrics @ IoU=0.5:\n")
+            f.write("-"*60 + "\n")
+            f.write(f"Precision: {precision_avg:.4f}\n")
+            f.write(f"Recall:    {recall_50:.4f}\n")
+            f.write(f"F1 Score:  {f1_score:.4f}\n")
+            f.write("="*60 + "\n")
+            
+        print(f"Evaluation results saved to: {os.path.join(temp_save_path, 'evaluation_results.txt')}")
         
         import matplotlib.pyplot as plt
         plt.figure(1) 
@@ -176,5 +222,5 @@ if __name__ == "__main__":
         plt.figure(1)
         plt.plot(precision_50)
         plt.show()
-        plt.savefig('p-r.png')
+        plt.savefig(os.path.join(temp_save_path, 'p-r.png'))
 
